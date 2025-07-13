@@ -1,10 +1,12 @@
 FROM alpine:latest
-ARG TARGETOS
-ARG TARGETARCH
+ARG TARGETPLATFORM
 
-COPY /build/output/derper_${TARGETOS}_${TARGETARCH} /usr/bin/derper
-RUN chmod +x /usr/bin/derper
+RUN apk update && \
+    apk upgrade --no-cache && \
+    apk add --no-cache ca-certificates &&\
+    rm -rf /var/cache/apk/*
 
+COPY /build/output/${TARGETPLATFORM}/derper /usr/bin/derper
 WORKDIR /data
 
 ENTRYPOINT [ "/usr/bin/derper" ]
