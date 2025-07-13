@@ -8,9 +8,9 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     outputs:
-      tagged: ${{ steps.tag.tagged }}
-      commit-hash: ${{ steps.tag.commit-hash }}
-      tag-name: ${{ steps.tag.tag-name }}
+      tagged: ${{ steps.tag.outputs.tagged }}
+      commit-hash: ${{ steps.tag.outputs.commit-hash }}
+      tag-name: ${{ steps.tag.outputs.tag-name }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -23,35 +23,38 @@ jobs:
           latest_tag_name=$(wget -qO- -t1 -T2 "https://api.github.com/repos/tailscale/tailscale/releases/latest" | jq -r '.tag_name')
           if [ -z "$latest_tag_name" ]; then
             echo "fetch tag name failed"
-            echo "Tagged=false" >> $GITHUB_OUTPUT
+            echo "tagged=false" >> $GITHUB_OUTPUT
             exit 0
           fi
           latest_commit_hash=$(wget -qO- -t1 -T2 "https://api.github.com/repos/tailscale/tailscale/commits" | jq -r '.[0].sha')
           if [ -z "$latest_commit_hash" ]; then
             echo "fetch commit hash failed" 
-            echo "Tagged=false" >> $GITHUB_OUTPUT
+            echo "tagged=false" >> $GITHUB_OUTPUT
             exit 0
           fi
           version="${latest_tag_name}-${latest_commit_hash:0:7}"
           if git rev-parse "refs/tags/$version" >/dev/null 2>&1; then
             echo "tag exists"
-            echo "Tagged=false" >> $GITHUB_OUTPUT
+            echo "tagged=false" >> $GITHUB_OUTPUT
             exit 0
           fi
+          git config user.name "GitHub Actions"
+          git config user.email "github-actions@users.noreply.github.com"
           git tag -a $version -m "release $version"
           echo "tagged=true" >> $GITHUB_OUTPUT
           echo "commit-hash=${latest_commit_hash}" >> $GITHUB_OUTPUT
           echo "tag-name=${version}" >> $GITHUB_OUTPUT
+          echo "tag set"
           
       - name: Push tags
-        if: ${{ steps.tag.tagged == 'true' }}
+        if: steps.tag.outputs.tagged == 'true'
         uses: ad-m/github-push-action@master
         with:
           branch: main
 
   trigger-build:
     needs: sync
-    if: ${{ needs.sync.outputs.tagged == 'true' }}
+    if: needs.sync.outputs.tagged == 'true'
     uses: ./.github/workflows/release-derper.yaml
     with:
       ref: ${{ needs.sync.outputs.commit-hash }}
