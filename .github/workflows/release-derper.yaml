@@ -61,6 +61,10 @@ jobs:
         with:
           repository: 'tailscale/tailscale'
           ref: ${{ inputs.ref }}
+      - name: Checkout Dockerfile
+        uses: actions/checkout@v4
+        with:
+          path: build/derper
 
       - uses: actions/setup-go@v5
         with:
@@ -102,7 +106,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: Dockerfile.derper
+          file: build/derper/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
