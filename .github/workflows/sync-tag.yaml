@@ -52,7 +52,7 @@ jobs:
   trigger-build:
     needs: sync
     if: ${{ needs.sync.outputs.tagged == 'true' }}
-    uses: ./.github/workflows/release-derper.yml
+    uses: ./.github/workflows/release-derper.yaml
     with:
       ref: ${{ needs.sync.outputs.commit-hash }}
       release-tag-name: ${{ needs.sync.outputs.tag-name }}
