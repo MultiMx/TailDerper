@@ -4,13 +4,19 @@ on:
   workflow_call:
     inputs:
       ref:
-        description: 'Target tailscale ref to use'
         required: true
         type: string
       release-tag-name:
-        description: 'Tag name for release'
         required: true
         type: string
+      release-image:
+        required: true
+        type: string
+    secrets:
+      registry-username:
+        required: true
+      registry-password:
+        required: true
 
 jobs:
   release:
@@ -73,7 +79,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKERHUB_REPO }}
+          images: ${{ inputs.release-image }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -84,8 +90,8 @@ jobs:
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: ${{ secrets.registry-username }}
+          password: ${{ secrets.registry-password }}
 
       - name: Build Binary
         run: |
