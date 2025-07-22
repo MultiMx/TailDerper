@@ -1,0 +1,32 @@
+name: Cleanup Old Releases
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 2 * *'
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install GitHub CLI
+        uses: cli/cli-action@v2
+
+      - name: Delete old releases (keep latest 20)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api repos/${{ github.repository }}/releases --paginate \
+            | jq -r 'sort_by(.created_at) | reverse | .[20:] | .[] | @base64' \
+            | while read release; do
+                _jq() { echo ${release} | base64 --decode | jq -r ${1}; }
+                id=$(_jq '.id')
+                tag=$(_jq '.tag_name')
+                echo "Deleting release ID: $id, tag: $tag"
+                gh api -X DELETE repos/${{ github.repository }}/releases/$id
+                gh api -X DELETE repos/${{ github.repository }}/git/refs/tags/$tag
+              done
