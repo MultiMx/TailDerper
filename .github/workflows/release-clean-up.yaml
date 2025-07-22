@@ -14,7 +14,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install GitHub CLI
-        uses: actions4gh/setup-gh@v1
+        run: apt-get install -y gh
 
       - name: Delete old releases (keep latest 20)
         env:
