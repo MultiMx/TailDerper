@@ -84,6 +84,10 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ inputs.release-image }}
+          flavor: |
+            latest=true
+          tags: |
+            type=raw,value=${{ inputs.release-tag-name }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
